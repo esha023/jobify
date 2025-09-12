@@ -1,5 +1,8 @@
-import React from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import React from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
 import {
   HomeLayout,
   Landing,
@@ -13,30 +16,36 @@ import {
   Profile,
   Admin,
   EditJob,
-} from './assets/pages';
+} from "./assets/pages";
 
-import {action as registerAction} from './assets/pages/Register.jsx';
-import {action as loginAction} from './assets/pages/Login.jsx';
-import {action as addJob} from './assets/pages/AddJob.jsx';
-import {action as editJob} from './assets/pages/EditJob.jsx';
-import {action as addImage} from './assets/pages/Profile.jsx';
-import {loader as DashboardLoader} from './assets/pages/DashboardLayout.jsx';
-import {loader as JobsLoader} from './assets/pages/AllJobs.jsx';
-import {loader as EditJobLoader} from './assets/pages/EditJob.jsx';
-import {loader as AdminLoader} from './assets/pages/Admin.jsx';
-import {loader as StatsLoader} from './assets/pages/Stats.jsx';
+import { action as registerAction } from "./assets/pages/Register.jsx";
+import { action as loginAction } from "./assets/pages/Login.jsx";
+import { action as addJob } from "./assets/pages/AddJob.jsx";
+import {
+  action as editJobAction,
+  loader as editJobLoader,
+} from "./assets/pages/EditJob.jsx";
+import { action as deleteJobAction } from "./assets/pages/DeleteJob.jsx";
+import { action as addImage } from "./assets/pages/Profile.jsx";
+import { loader as DashboardLoader } from "./assets/pages/DashboardLayout.jsx";
+import { loader as JobsLoader } from "./assets/pages/AllJobs.jsx";
+import { loader as AdminLoader } from "./assets/pages/Admin.jsx";
+import { loader as StatsLoader } from "./assets/pages/Stats.jsx";
 
+// theme setup
 export const checkDefaultTheme = () => {
   const isDarkTheme = localStorage.getItem("dark-theme") === "true";
   document.body.classList.toggle("dark-theme", isDarkTheme);
   return isDarkTheme;
 };
-
 checkDefaultTheme();
+
+// create queryClient
+const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: <HomeLayout />,
     errorElement: <Error />,
     children: [
@@ -45,17 +54,17 @@ const router = createBrowserRouter([
         element: <Landing />,
       },
       {
-        path: '/register',
+        path: "/register",
         element: <Register />,
         action: registerAction,
       },
       {
-        path: '/login',
+        path: "/login",
         element: <Login />,
         action: loginAction,
       },
       {
-        path: '/dashboard',
+        path: "/dashboard",
         element: <DashboardLayout />,
         loader: DashboardLoader,
         children: [
@@ -65,39 +74,48 @@ const router = createBrowserRouter([
             action: addJob,
           },
           {
-            path: 'all-jobs',
+            path: "all-jobs",
             element: <AllJobs />,
             loader: JobsLoader,
           },
           {
-            path: 'stats',
+            path: "stats",
             element: <Stats />,
             loader: StatsLoader,
           },
           {
-            path: 'profile',
+            path: "profile",
             element: <Profile />,
             action: addImage,
           },
           {
-            path: 'admin',
+            path: "admin",
             element: <Admin />,
             loader: AdminLoader,
           },
           {
-            path: 'edit-job/:id',
-            element: <EditJob/>,
-            action: editJob,
-            loader: EditJobLoader,
+            path: "edit-job/:id",
+            element: <EditJob />,
+            action: editJobAction(queryClient),
+            loader: editJobLoader(queryClient),
           },
-        ]
+          {
+            path: "delete-job/:id",
+            action: deleteJobAction,
+          },
+        ],
       },
-    ]
+    ],
   },
-  
 ]);
 
 const App = () => {
-  return <RouterProvider router={router} />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  );
 };
-export default App
+
+export default App;
